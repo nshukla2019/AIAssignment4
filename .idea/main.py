@@ -1,27 +1,25 @@
-import csv
+import boardReader
 
-BOARD_ROWS = 0          # need to read this in when reading in the file
-BOARD_COLS = 0          # need to read this in when reading in the file
-WIN_STATE = (0, 3)      # maybe this is an array of just positive non-zero values?
-# LOSE_STATE = (1, 3)     # do we need this
-START = (2, 0)          # choose this randomly (has to be non-terminal start state)
-
-
+PROBABILITY_TO_DESIRED_DIRECTION = 0.8   # read this value in from command line
+PROBABILITY_TO_ANY_OTHER_DIRECTION = round(((1.0 - PROBABILITY_TO_DESIRED_DIRECTION)/2), 1)
+WIN_STATE = (-1, -1)                      # maybe this is an array of just positive non-zero values since there could be multiple
+START = (-1, -1)                          # choose this randomly (has to be non-terminal start state)
+# LOSE_STATE = (1, 3)                     # do we need this
+BOARD_ROWS = 0
+BOARD_COLS = 0
 
 if __name__ == "__main__":
 
-    with open('boards/board0.txt', newline = '') as line:
-        columnCount = 0
-        line_reader = csv.reader(line, delimiter='\t')
+    board_info = boardReader._readFile('boards/board0.txt')
+    BOARD_ROWS = board_info[0]
+    BOARD_COLS = board_info[1]
 
-        for line in line_reader:
-            BOARD_ROWS = BOARD_ROWS + 1                     # num of lines in line_reader is the number of rows
-            curLine = ', '.join(line)
-            BOARD_COLS = sum(c.isdigit() for c in curLine)  # num of digits in curLine is the number of columns
-
-            print(', '.join(line))
-
+    #WIN_STATE = boardReader._getWinAndLoseStates('boards/board0.txt')
     print()
     print("BOARD_ROWS: " + BOARD_ROWS.__str__())
     print("BOARD_COLS: " + BOARD_COLS.__str__())
+    print("PROB TO DESIRED: " + PROBABILITY_TO_DESIRED_DIRECTION.__str__())
+    print("PROB TO ANY OTHER DIRECTION: " + PROBABILITY_TO_ANY_OTHER_DIRECTION.__str__())
+    print("WI_STATES: " + WIN_STATE.__str__())
+
 
