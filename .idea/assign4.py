@@ -8,9 +8,12 @@ class Move(IntEnum):
     LEFT = 3
 
 class QFunc():
-    def __init__(self, map, moves = [Move.UP,Move.RIGHT,Move.DOWN,Move.LEFT]):
+    def __init__(self, map, action_cost = -0.05,moves = [Move.UP,Move.RIGHT,Move.DOWN,Move.LEFT]):
         self.map = map
         self.moves = moves
+        self.action_cost = action_cost
+
+
         self.Q = self.init_Q()
 
     def init_Q(self):
@@ -26,15 +29,26 @@ class QFunc():
     def lookup_Q(self,pos,move):
         return self.Q[pos[1]][pos[0]][int(move)]
 
+    def lookup_best_Q(self,pos):
+        return max(self.Q[pos[1]][pos[0]])
+
+    def update_Q(self,pos,move):
+        self.Q[pos[1]][pos[0]][int(move)] += 0 #use update rule
+
 class Map():
     def __init__(self, size):
         self.size = size
+        self.max_fill = [0.5,1.0]
+        self.min_fill = [-1.0,-0.5]
+        self.fill_weights = [95,2.5,2.5]
+        self.move_weights = [90,5,5]
         self.map = self.make_map()
 
     def map_fill(self):
-        choices = [0,1,-1]
-        weights = [95,2.5,2.5]
-        return random.choices(choices,weights = weights,k=1)[0]
+        max_val = round(random.uniform(self.max_fill[0],self.max_fill[1]),2)
+        min_val = round(random.uniform(self.min_fill[0],self.min_fill[1]),2)
+        choices = [0,max_val,min_val]
+        return random.choices(choices,weights = self.fill_weights,k=1)[0]
 
     def random_pos(self):
         return (random.randint(0,self.size[0]-1),random.randint(0,self.size[1]-1))
@@ -53,14 +67,14 @@ class Map():
             terminal_low = self.random_pos()
             while terminal_low == terminal_high:
                 terminal_low = self.random_pos()
-            map[terminal_high[1]][terminal_high[0]] = 1
-            map[terminal_low[1]][terminal_low[0]] = -1
+            map[terminal_high[1]][terminal_high[0]] = round(random.uniform(self.max_fill[0],self.max_fill[1]),2)
+            map[terminal_low[1]][terminal_low[0]] = round(random.uniform(self.min_fill[0],self.min_fill[1]),2)
         elif not has_terminals[0]:
             terminal_high = self.random_pos()
-            map[terminal_high[1]][terminal_high[0]] = 1
+            map[terminal_high[1]][terminal_high[0]] = round(random.uniform(self.max_fill[0],self.max_fill[1]),2)
         elif not has_terminals[1]:
             terminal_low = self.random_pos()
-            map[terminal_low[1]][terminal_low[0]] = -1
+            map[terminal_low[1]][terminal_low[0]] = round(random.uniform(self.min_fill[0],self.min_fill[1]),2)
         return map
 
     def map_to_string(self):
@@ -70,6 +84,35 @@ class Map():
         file = open(filepath,'w')
         file.write(map_to_string(self.map))
         file.close()
+
+    def move_deflection(self,move,direction_right):
+        if direction_right:
+            return Move(Min((int(move)+1),len(self.moves)))
+        else:
+            return Move(Max((int(move)-1),0))
+
+    def get_move_transition(self,pos,move):
+        choices = [0,1,-1]
+        deflect = random.choices(choices,weights = self.move_weights,k=1)[0]
+        if(deflect == 1):
+            move = self.move_deflection(move,True)
+        elif(defelct == -1):
+            move = self.move_deflection(move,False)
+        if(move == move.UP):
+            new_y = Max(pos[1]-1,0)
+            return (pos[0],new_y)
+        elif(move == move.RIGHT):
+            new_x = Min(pos[0]+1,self.size[0]-1)
+            return (new_x,pos[1])
+        elif(move == move.DOWN):
+            new_y = Min(pos[1]+1,self.size[1]-1)
+            return (pos[0],new_y)
+        elif(move == move.LEFT):
+            new_x = Max(pos[0]-1,0)
+            return (new_x,pos[1])
+
+
+
 
 
 m = Map((6,5))
