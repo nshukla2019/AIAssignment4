@@ -173,9 +173,11 @@ Q = QFunc(m)
 pos = m.random_non_terminal()
 for i in range(1000):
     pos = Q.make_move(pos)
+    # stop when reach terminal
+        # check here if pos is in self.non_terminals
+            # if it is not, then we have reached a terminal state
 
-# stop when reach terminal
-# repeat process at random points
+    # repeat process at random points
 
 result = Q.get_readable_Q()
 for y in result:
