@@ -1,5 +1,8 @@
 import random
 from enum import IntEnum
+import csv
+import sys
+import time
 
 class Move(IntEnum):
     UP = 0
@@ -63,28 +66,38 @@ class QFunc():
                     if cur_moves[m] > best_val:
                         best_move = m
                         best_val = cur_moves[m]
-                if(best_move == 0):
-                    readable[y][x] = '^'
-                elif(best_move == 1):
-                    readable[y][x] = '>'
-                elif(best_move == 2):
-                    readable[y][x] = '<'
-                elif(best_move == 3):
-                    readable[y][x] = 'v'
+                print(self.map.map[y][x])
+                if((x,y) not in self.map.non_terminals):
+                    readable[y][x] = str(self.map.map[y][x])
+                else:
+                    if(best_move == 0):
+                        readable[y][x] = '^'
+                    elif(best_move == 1):
+                        readable[y][x] = '>'
+                    elif(best_move == 2):
+                        readable[y][x] = '<'
+                    elif(best_move == 3):
+                        readable[y][x] = 'v'
         return readable
 
 
 
 class Map():
-    def __init__(self, size,moves = [Move.UP,Move.RIGHT,Move.DOWN,Move.LEFT]):
+    def __init__(self, move_weights,size = [5,5],moves = [Move.UP,Move.RIGHT,Move.DOWN,Move.LEFT], map_str = ''):
         self.size = size
         self.moves = moves
         self.max_fill = [0.5,1.0]
         self.min_fill = [-1.0,-0.5]
         self.fill_weights = [95,2.5,2.5]
-        self.move_weights = [90,5,5]
+        self.move_weights = move_weights
         self.non_terminals = []
-        self.map = self.make_map()
+
+        if(map_str ==  ''):
+
+            self.map = self.make_map()
+        else:
+            print('using saved')
+            self.map = self.str_to_map(map_str)
 
     def map_fill(self):
         max_val = round(random.uniform(self.max_fill[0],self.max_fill[1]),2)
@@ -131,12 +144,27 @@ class Map():
             self.non_terminals.remove(terminal_low)
         return map
 
+    def str_to_map(self,str):
+        map = []
+        rows = str.split('\n')
+        for row in rows:
+            cols = row.split(',')
+            map.append(cols)
+
+        self.size = (len(map[0]),len(map))
+        for y in range(len(map)):
+            for x in range(len(map[y])):
+                if map[y][x] == '0':
+                    self.non_terminals.append((x,y))
+        return map
+
+
     def map_to_string(self):
         return '\n'.join([','.join([str(x) for x in self.map[y]]) for y in range(self.size[1])])
 
     def map_to_file(self,filepath):
         file = open(filepath,'w')
-        file.write(map_to_string(self.map))
+        file.write(self.map_to_string())
         file.close()
 
     def move_deflection(self,move,direction_right):
@@ -166,23 +194,48 @@ class Map():
             return (new_x,pos[1])
 
 
-m = Map((6,5))
-print(m.map_to_string())
-Q = QFunc(m)
 
-pos = m.random_non_terminal()
-for i in range(1000):
-    pos = Q.make_move(pos)
-    # stop when reach terminal
-        # check here if pos is in self.non_terminals
-            # if it is not, then we have reached a terminal state
-                # pos = m.random_non_terminal() to chose another random start state
 
-    # repeat process at random points
+def _readFile(boardPath):
 
-result = Q.get_readable_Q()
-for y in result:
-    print(y)
+    with open(boardPath, newline = '') as line:
+        line_reader = csv.reader(line, delimiter=',')
+
+        str = ''
+        lines = []
+        for line in line_reader:                  # num of lines in line_reader is the number of rows
+            curLine = ', '.join(line)
+            numOfColumns = sum(c.isdigit() for c in curLine)  # num of digits in curLine is the number of columns
+
+            lines.append(', '.join(line))
+
+    return '\n'.join(lines)
+
+
+
+# m = Map((6,5))
+# print(m.map_to_string())
+# Q = QFunc(m)
+
+# pos = m.random_non_terminal()
+# print(pos)
+# for i in range(1000):
+#     new_pos = Q.make_move(pos)
+#     if new_pos in m.non_terminals:
+#         pos = m.random_non_terminal()
+#     else:
+#         pos = new_pos
+#
+#     # stop when reach terminal
+#         # check here if pos is in self.non_terminals
+#             # if it is not, then we have reached a terminal state
+#                 # pos = m.random_non_terminal() to chose another random start state
+#
+#     # repeat process at random points
+#
+# result = Q.get_readable_Q()
+# for y in result:
+#     print(y)
 
 
 # code to read in arguments from command line
@@ -193,7 +246,25 @@ constant_reward = 0
 
 if __name__ == "__main__":
     FilePath = sys.argv[1]
-    secondsToLearn = sys.argv[2]
-    probability_To_Desired_Direction = sys.argv[3]
-    probability_To_Any_Other_Direction = round(((1.0 - probability_To_Desired_Direction)/2), 1)
-    constant_reward = sys.argv[4]
+    secondsToLearn = float(sys.argv[2])
+    probability_To_Desired_Direction = float(sys.argv[3])
+    probability_To_Any_Other_Direction = round(((1.0 - probability_To_Desired_Direction)/2), 3)
+    move_weights = [probability_To_Desired_Direction,probability_To_Any_Other_Direction,probability_To_Any_Other_Direction]
+    constant_reward = float(sys.argv[4])
+    map_str = _readFile(FilePath)
+    # m = Map(move_weights = move_weights)
+    m = Map(move_weights = move_weights,map_str = map_str)
+    Q = QFunc(m,action_cost = constant_reward)
+    finish_time = secondsToLearn + time.time()
+    pos = m.random_non_terminal()
+    print(len(m.map))
+    print(len(Q.Q))
+    while(finish_time > time.time()):
+        new_pos = Q.make_move(pos)
+        if new_pos in m.non_terminals:
+            pos = m.random_non_terminal()
+        else:
+            pos = new_pos
+    result = Q.get_readable_Q()
+    for y in result:
+        print(y)
