@@ -29,9 +29,11 @@ class QFunc():
     def lookup_Q(self,pos,move):
         return self.Q[pos[1]][pos[0]][int(move)]
 
+    # TODO
     def lookup_best_Q(self,pos):
         return max(self.Q[pos[1]][pos[0]])
 
+    # TODO
     def update_Q(self,pos,move):
         self.Q[pos[1]][pos[0]][int(move)] += 0 #use update rule
 
@@ -53,6 +55,7 @@ class Map():
     def random_pos(self):
         return (random.randint(0,self.size[0]-1),random.randint(0,self.size[1]-1))
 
+    # checking whether file has terminal states
     def make_map(self):
         has_terminals = (False,False) # high,low
         map = []
@@ -112,10 +115,21 @@ class Map():
             return (new_x,pos[1])
 
 
-
-
-
 m = Map((6,5))
 print(m.map_to_string())
 Q = QFunc(m)
 print(Q.lookup_Q((0,0),Move.UP))
+
+
+# code to read in arguments from command line
+filePath = ''
+secondsToLearn = 0
+probability_To_Desired_Direction = 0
+constant_reward = 0
+
+if __name__ == "__main__":
+    FilePath = sys.argv[1]
+    secondsToLearn = sys.argv[2]
+    secondprobability_To_Desired_DirectionsToLearn = sys.argv[3]
+    probability_To_Any_Other_Direction = round(((1.0 - PROBABILITY_TO_DESIRED_DIRECTION)/2), 1)
+    constant_reward = sys.argv[4]
