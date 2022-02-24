@@ -176,6 +176,7 @@ for i in range(1000):
     # stop when reach terminal
         # check here if pos is in self.non_terminals
             # if it is not, then we have reached a terminal state
+                # pos = m.random_non_terminal() to chose another random start state
 
     # repeat process at random points
 
@@ -193,6 +194,6 @@ constant_reward = 0
 if __name__ == "__main__":
     FilePath = sys.argv[1]
     secondsToLearn = sys.argv[2]
-    secondprobability_To_Desired_DirectionsToLearn = sys.argv[3]
-    probability_To_Any_Other_Direction = round(((1.0 - PROBABILITY_TO_DESIRED_DIRECTION)/2), 1)
+    probability_To_Desired_Direction = sys.argv[3]
+    probability_To_Any_Other_Direction = round(((1.0 - probability_To_Desired_Direction)/2), 1)
     constant_reward = sys.argv[4]
